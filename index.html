@@ -1,112 +1,112 @@
 <!DOCTYPE html>
-‎<html lang="fr">
-‎<head>
-‎<meta charset="utf-8">
-‎<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-‎<title>Tirs au but – Jeu de football gratuit en ligne</title>
-‎<meta name="description" content="Jouez gratuitement à Tirs au but : 5 tirs, un gardien, un seul but à marquer. Jeu de football en ligne pour mobile et ordinateur.">
-‎<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7629936501070566" crossorigin="anonymous"></script>
-‎<style>
-‎:root{--bg:#f2f4f7;--fg:#14181f;--card:#fff;--ac:#1d9bf0;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-‎@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1218;--fg:#f1f3f6;--card:#1b212b}}
-‎:root[data-theme="dark"]{--bg:#0f1218;--fg:#f1f3f6;--card:#1b212b}
-‎html{scroll-padding-top:env(safe-area-inset-top,0px)}
-‎body{margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,sans-serif;display:flex;flex-direction:column;align-items:center;padding:12px}
-‎h1{font-size:20px;margin:4px 0}
-‎#hud{display:flex;justify-content:space-between;width:100%;max-width:360px;font-weight:600;margin-bottom:6px}
-‎#dots{letter-spacing:4px}
-‎canvas{width:100%;max-width:360px;aspect-ratio:360/520;border-radius:16px;touch-action:none;background:#2e8b3d}
-‎#msg{height:28px;font-weight:700;font-size:20px;margin:8px 0}
-‎button{background:var(--ac);color:#fff;border:0;border-radius:24px;padding:12px 28px;font-size:16px;font-weight:600}
-‎nav,footer{width:100%;max-width:360px;text-align:center;font-size:14px}
-‎nav a,footer a{color:var(--ac);margin:0 8px;text-decoration:none}
-‎.ad{width:100%;max-width:360px;min-height:90px;margin:14px 0}
-‎.txt{max-width:360px;font-size:14px;line-height:1.5;background:var(--card);border-radius:12px;padding:12px 16px;margin:10px 0}
-‎.txt h2{font-size:16px;margin:0 0 6px}
-‎</style>
-‎</head>
-‎<body>
-‎<nav><a href="index.html">Jeu</a><a href="contact.html">Contact</a><a href="confidentialite.html">Confidentialité</a></nav>
-‎<h1>⚽ Tirs au but</h1>
-‎<div id="hud"><span>Score : <b id="sc">0</b></span><span id="dots"></span><span>Tir <b id="rd">1</b>/5</span></div>
-‎<canvas id="c" width="360" height="520"></canvas>
-‎<div id="msg">Touche le but pour viser</div>
-‎<button id="btn" style="display:none">Rejouer</button>
-‎<div class="ad">
-‎<ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-7629936501070566" data-ad-slot="0000000000" data-ad-format="auto" data-full-width-responsive="true"></ins>
-‎<script>(adsbygoogle=window.adsbygoogle||[]).push({});</script></div>
-‎<div class="txt"><h2>Comment jouer ?</h2>Tu as 5 tirs. Touche la zone du but pour choisir où tirer : le gardien plonge à gauche, au centre ou à droite. Vise les coins loin du gardien pour marquer, mais attention : si tu tires en dehors du but, le tir est raté. Fais le meilleur score possible et rejoue autant que tu veux, gratuitement.</div>
-‎<footer><a href="contact.html">Contact</a><a href="confidentialite.html">Politique de confidentialité</a><br>© 2026 Tirs au but</footer>
-‎<script>
-‎const c=document.getElementById('c'),x=c.getContext('2d');
-‎const G={x:40,y:70,w:280,h:110},B0={x:180,y:450};
-‎let score=0,round=1,phase='aim',res=[],ball={x:B0.x,y:B0.y,r:12},tgt,keeper,t0,kx=180,kdir=1,goal=false,miss=false;
-‎const $=id=>document.getElementById(id);
-‎function ui(){$('sc').textContent=score;$('rd').textContent=Math.min(round,5);$('dots').textContent=Array.from({length:5},(_,i)=>res[i]===undefined?'○':res[i]?'🟢':'🔴').join('')}
-‎function draw(){
-‎ x.fillStyle='#2e8b3d';x.fillRect(0,0,360,520);
-‎ for(let i=0;i<8;i++){x.fillStyle=i%2?'#2a8238':'#349644';x.fillRect(0,i*65,360,65)}
-‎ x.strokeStyle='#fff';x.lineWidth=3;x.strokeRect(10,40,340,200);
-‎ x.beginPath();x.arc(180,B0.y,3,0,7);x.fillStyle='#fff';x.fill();
-‎ x.fillStyle='rgba(255,255,255,.12)';x.fillRect(G.x,G.y,G.w,G.h);
-‎ x.strokeStyle='rgba(255,255,255,.35)';x.lineWidth=1;
-‎ for(let i=G.x;i<=G.x+G.w;i+=14){x.beginPath();x.moveTo(i,G.y);x.lineTo(i,G.y+G.h);x.stroke()}
-‎ for(let j=G.y;j<=G.y+G.h;j+=14){x.beginPath();x.moveTo(G.x,j);x.lineTo(G.x+G.w,j);x.stroke()}
-‎ x.strokeStyle='#fff';x.lineWidth=6;x.strokeRect(G.x,G.y,G.w,G.h);
-‎ const k=keeper||{x:kx,y:G.y+G.h-8};
-‎ x.save();x.translate(k.x,k.y);if(k.rot)x.rotate(k.rot);
-‎ x.fillStyle='#f5b700';x.fillRect(-14,-50,28,40);
-‎ x.fillStyle='#ffd7b0';x.beginPath();x.arc(0,-58,10,0,7);x.fill();
-‎ x.fillStyle='#f5b700';x.fillRect(-42,-48,84,8);
-‎ x.fillStyle='#222';x.fillRect(-12,-10,10,22);x.fillRect(2,-10,10,22);
-‎ x.restore();
-‎ if(phase==='aim'&&tgt){x.strokeStyle='#ff3b3b';x.lineWidth=2;x.beginPath();x.arc(tgt.x,tgt.y,10,0,7);x.stroke()}
-‎ x.fillStyle='#fff';x.beginPath();x.arc(ball.x,ball.y,ball.r,0,7);x.fill();
-‎ x.strokeStyle='#222';x.lineWidth=2;x.stroke();
-‎ x.fillStyle='#222';x.beginPath();x.arc(ball.x,ball.y,ball.r*.35,0,7);x.fill();
-‎}
-‎function loop(t){
-‎ if(phase==='aim'){kx=180+Math.sin(t/500)*40}
-‎ if(phase==='shoot'){
-‎  const p=Math.min((t-t0)/550,1);
-‎  ball.x=B0.x+(tgt.x-B0.x)*p;ball.y=B0.y+(tgt.y-B0.y)*p;ball.r=12-5*p;
-‎  if(keeper&&keeper.to){const q=Math.min(p*1.4,1);keeper.x=keeper.fx+(keeper.to.x-keeper.fx)*q;keeper.y=keeper.fy+(keeper.to.y-keeper.fy)*q;keeper.rot=keeper.rt*q}
-‎  if(p>=1)finish();
-‎ }
-‎ draw();requestAnimationFrame(loop);
-‎}
-‎function shoot(px,py){
-‎ tgt={x:px,y:py};
-‎ const inGoal=px>G.x&&px<G.x+G.w&&py>G.y&&py<G.y+G.h;
-‎ const side=[-1,0,1][Math.floor(Math.random()*3)];
-‎ const to={x:180+side*85,y:G.y+G.h-30-(side?10:0)};
-‎ keeper={fx:kx,fy:G.y+G.h-8,x:kx,y:G.y+G.h-8,to,rt:side*1.1};
-‎ const near=Math.hypot(px-to.x,(py-(to.y-30))*0.8)<52;
-‎ goal=inGoal&&!near;
-‎ miss=!inGoal;
-‎ phase='shoot';t0=performance.now();
-‎ $('msg').textContent='';
-‎}
-‎function finish(){
-‎ phase='result';
-‎ res.push(goal?1:0);if(goal)score++;
-‎ $('msg').textContent=goal?'⚽ BUUUT !':(miss?'😬 À côté !':'🧤 Arrêt du gardien !');
-‎ ui();
-‎ setTimeout(()=>{
-‎  if(round>=5){end()}else{round++;reset()}
-‎ },1400);
-‎}
-‎function reset(){phase='aim';ball={x:B0.x,y:B0.y,r:12};tgt=null;keeper=null;$('msg').textContent='Touche le but pour viser';ui()}
-‎function end(){phase='end';$('msg').textContent=score>=4?'🏆 '+score+'/5 – Excellent !':score>=3?'👍 '+score+'/5 – Bien joué':'😅 '+score+'/5 – Retente !';$('btn').style.display='';ui()}
-‎$('btn').onclick=()=>{score=0;round=1;res=[];$('btn').style.display='none';reset()};
-‎function pos(e){const r=c.getBoundingClientRect();return{x:(e.clientX-r.left)*360/r.width,y:(e.clientY-r.top)*520/r.height}}
-‎c.addEventListener('pointerdown',e=>{
-‎ if(phase!=='aim')return;
-‎ const p=pos(e);
-‎ p.y=Math.min(Math.max(p.y,40),300);
-‎ shoot(p.x,p.y);
-‎});
-‎ui();requestAnimationFrame(loop);
-‎</script>
-‎</body>
-‎</html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tirs au but – Jeu de football gratuit en ligne</title>
+<meta name="description" content="Jouez gratuitement à Tirs au but : 5 tirs, un gardien, un seul but à marquer. Jeu de football en ligne pour mobile et ordinateur.">
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7629936501070566" crossorigin="anonymous"></script>
+<style>
+:root{--bg:#f2f4f7;--fg:#14181f;--card:#fff;--ac:#1d9bf0;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1218;--fg:#f1f3f6;--card:#1b212b}}
+:root[data-theme="dark"]{--bg:#0f1218;--fg:#f1f3f6;--card:#1b212b}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,sans-serif;display:flex;flex-direction:column;align-items:center;padding:12px}
+h1{font-size:20px;margin:4px 0}
+#hud{display:flex;justify-content:space-between;width:100%;max-width:360px;font-weight:600;margin-bottom:6px}
+#dots{letter-spacing:4px}
+canvas{width:100%;max-width:360px;aspect-ratio:360/520;border-radius:16px;touch-action:none;background:#2e8b3d}
+#msg{height:28px;font-weight:700;font-size:20px;margin:8px 0}
+button{background:var(--ac);color:#fff;border:0;border-radius:24px;padding:12px 28px;font-size:16px;font-weight:600}
+nav,footer{width:100%;max-width:360px;text-align:center;font-size:14px}
+nav a,footer a{color:var(--ac);margin:0 8px;text-decoration:none}
+.ad{width:100%;max-width:360px;min-height:90px;margin:14px 0}
+.txt{max-width:360px;font-size:14px;line-height:1.5;background:var(--card);border-radius:12px;padding:12px 16px;margin:10px 0}
+.txt h2{font-size:16px;margin:0 0 6px}
+</style>
+</head>
+<body>
+<nav><a href="index.html">Jeu</a><a href="contact.html">Contact</a><a href="confidentialite.html">Confidentialité</a></nav>
+<h1>⚽ Tirs au but</h1>
+<div id="hud"><span>Score : <b id="sc">0</b></span><span id="dots"></span><span>Tir <b id="rd">1</b>/5</span></div>
+<canvas id="c" width="360" height="520"></canvas>
+<div id="msg">Touche le but pour viser</div>
+<button id="btn" style="display:none">Rejouer</button>
+<div class="ad">
+<ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-7629936501070566" data-ad-slot="0000000000" data-ad-format="auto" data-full-width-responsive="true"></ins>
+<script>(adsbygoogle=window.adsbygoogle||[]).push({});</script></div>
+<div class="txt"><h2>Comment jouer ?</h2>Tu as 5 tirs. Touche la zone du but pour choisir où tirer : le gardien plonge à gauche, au centre ou à droite. Vise les coins loin du gardien pour marquer, mais attention : si tu tires en dehors du but, le tir est raté. Fais le meilleur score possible et rejoue autant que tu veux, gratuitement.</div>
+<footer><a href="contact.html">Contact</a><a href="confidentialite.html">Politique de confidentialité</a><br>© 2026 Tirs au but</footer>
+<script>
+const c=document.getElementById('c'),x=c.getContext('2d');
+const G={x:40,y:70,w:280,h:110},B0={x:180,y:450};
+let score=0,round=1,phase='aim',res=[],ball={x:B0.x,y:B0.y,r:12},tgt,keeper,t0,kx=180,kdir=1,goal=false,miss=false;
+const $=id=>document.getElementById(id);
+function ui(){$('sc').textContent=score;$('rd').textContent=Math.min(round,5);$('dots').textContent=Array.from({length:5},(_,i)=>res[i]===undefined?'○':res[i]?'🟢':'🔴').join('')}
+function draw(){
+ x.fillStyle='#2e8b3d';x.fillRect(0,0,360,520);
+ for(let i=0;i<8;i++){x.fillStyle=i%2?'#2a8238':'#349644';x.fillRect(0,i*65,360,65)}
+ x.strokeStyle='#fff';x.lineWidth=3;x.strokeRect(10,40,340,200);
+ x.beginPath();x.arc(180,B0.y,3,0,7);x.fillStyle='#fff';x.fill();
+ x.fillStyle='rgba(255,255,255,.12)';x.fillRect(G.x,G.y,G.w,G.h);
+ x.strokeStyle='rgba(255,255,255,.35)';x.lineWidth=1;
+ for(let i=G.x;i<=G.x+G.w;i+=14){x.beginPath();x.moveTo(i,G.y);x.lineTo(i,G.y+G.h);x.stroke()}
+ for(let j=G.y;j<=G.y+G.h;j+=14){x.beginPath();x.moveTo(G.x,j);x.lineTo(G.x+G.w,j);x.stroke()}
+ x.strokeStyle='#fff';x.lineWidth=6;x.strokeRect(G.x,G.y,G.w,G.h);
+ const k=keeper||{x:kx,y:G.y+G.h-8};
+ x.save();x.translate(k.x,k.y);if(k.rot)x.rotate(k.rot);
+ x.fillStyle='#f5b700';x.fillRect(-14,-50,28,40);
+ x.fillStyle='#ffd7b0';x.beginPath();x.arc(0,-58,10,0,7);x.fill();
+ x.fillStyle='#f5b700';x.fillRect(-42,-48,84,8);
+ x.fillStyle='#222';x.fillRect(-12,-10,10,22);x.fillRect(2,-10,10,22);
+ x.restore();
+ if(phase==='aim'&&tgt){x.strokeStyle='#ff3b3b';x.lineWidth=2;x.beginPath();x.arc(tgt.x,tgt.y,10,0,7);x.stroke()}
+ x.fillStyle='#fff';x.beginPath();x.arc(ball.x,ball.y,ball.r,0,7);x.fill();
+ x.strokeStyle='#222';x.lineWidth=2;x.stroke();
+ x.fillStyle='#222';x.beginPath();x.arc(ball.x,ball.y,ball.r*.35,0,7);x.fill();
+}
+function loop(t){
+ if(phase==='aim'){kx=180+Math.sin(t/500)*40}
+ if(phase==='shoot'){
+  const p=Math.min((t-t0)/550,1);
+  ball.x=B0.x+(tgt.x-B0.x)*p;ball.y=B0.y+(tgt.y-B0.y)*p;ball.r=12-5*p;
+  if(keeper&&keeper.to){const q=Math.min(p*1.4,1);keeper.x=keeper.fx+(keeper.to.x-keeper.fx)*q;keeper.y=keeper.fy+(keeper.to.y-keeper.fy)*q;keeper.rot=keeper.rt*q}
+  if(p>=1)finish();
+ }
+ draw();requestAnimationFrame(loop);
+}
+function shoot(px,py){
+ tgt={x:px,y:py};
+ const inGoal=px>G.x&&px<G.x+G.w&&py>G.y&&py<G.y+G.h;
+ const side=[-1,0,1][Math.floor(Math.random()*3)];
+ const to={x:180+side*85,y:G.y+G.h-30-(side?10:0)};
+ keeper={fx:kx,fy:G.y+G.h-8,x:kx,y:G.y+G.h-8,to,rt:side*1.1};
+ const near=Math.hypot(px-to.x,(py-(to.y-30))*0.8)<52;
+ goal=inGoal&&!near;
+ miss=!inGoal;
+ phase='shoot';t0=performance.now();
+ $('msg').textContent='';
+}
+function finish(){
+ phase='result';
+ res.push(goal?1:0);if(goal)score++;
+ $('msg').textContent=goal?'⚽ BUUUT !':(miss?'😬 À côté !':'🧤 Arrêt du gardien !');
+ ui();
+ setTimeout(()=>{
+  if(round>=5){end()}else{round++;reset()}
+ },1400);
+}
+function reset(){phase='aim';ball={x:B0.x,y:B0.y,r:12};tgt=null;keeper=null;$('msg').textContent='Touche le but pour viser';ui()}
+function end(){phase='end';$('msg').textContent=score>=4?'🏆 '+score+'/5 – Excellent !':score>=3?'👍 '+score+'/5 – Bien joué':'😅 '+score+'/5 – Retente !';$('btn').style.display='';ui()}
+$('btn').onclick=()=>{score=0;round=1;res=[];$('btn').style.display='none';reset()};
+function pos(e){const r=c.getBoundingClientRect();return{x:(e.clientX-r.left)*360/r.width,y:(e.clientY-r.top)*520/r.height}}
+c.addEventListener('pointerdown',e=>{
+ if(phase!=='aim')return;
+ const p=pos(e);
+ p.y=Math.min(Math.max(p.y,40),300);
+ shoot(p.x,p.y);
+});
+ui();requestAnimationFrame(loop);
+</script>
+</body>
+</html>
